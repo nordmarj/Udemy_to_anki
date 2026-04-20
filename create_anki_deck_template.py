@@ -14,9 +14,8 @@ Options:
   --output NAME    Stem for output files (default: stem of html_file).
                    Produces NAME.apkg and NAME.txt in the same folder as html_file.
   --deck DECK      Anki deck name (use :: as separator).
-                   Default: All::Software Engineering::AWS::
-                             AWS MLS Machine Learning Specialty::AWS MLS Practice Exams
-  --deck-id ID     Anki deck ID (integer). Default: 1768161246715.
+                   Default: derived from the HTML filename.
+  --deck-id ID     Anki deck ID (integer). Default: auto-generated.
 
 Examples:
   python create_anki_deck.py "exam1.html"
