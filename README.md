@@ -85,3 +85,7 @@ python build_script.py
 ```
 
 This inlines the base64-encoded seed databases into `create_anki_deck.py`.
+
+## Attribution
+
+The card templates incorporate [anki-persistence](https://github.com/SimonLammer/anki-persistence) (MIT) and portions derived from [Glutanimate's Cloze Overlapper](https://github.com/glutanimate/cloze-overlapper) (CC BY-SA 4.0). See [NOTICE.md](NOTICE.md) for full details.
