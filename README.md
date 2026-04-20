@@ -10,10 +10,9 @@ Please use the resulting flashcards in accordance with IP law. The platform migh
 
 - Python 3.8+
 - [beautifulsoup4](https://pypi.org/project/beautifulsoup4/)
-- [zstandard](https://pypi.org/project/zstandard/)
 
 ```bash
-pip install beautifulsoup4 zstandard
+pip install beautifulsoup4
 ```
 
 ## Anki note type

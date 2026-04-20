@@ -31,8 +31,8 @@ import re
 import sqlite3
 import tempfile
 import time
+import json
 import zipfile
-import zstandard
 from bs4 import BeautifulSoup
 
 MODEL_ID = 1744270289295   # AllInOne (kprim, mc, sc)++sixOptions
@@ -362,9 +362,6 @@ SEED_LEGACY_B64 = (
     "pbv+etyfqtwvjf4/HLeJIgDIAAA="
 )
 
-# Anki apkg meta file (protobuf: {version: 3}).  Required for correct import.
-APKG_META = b'\x08\x03'
-
 # ── CLI ───────────────────────────────────────────────────────────────────────
 parser = argparse.ArgumentParser(
     description='Convert Udemy HTML practice exam to Anki .apkg')
@@ -533,54 +530,6 @@ def field_checksum(sort_field_text):
     return int(hashlib.sha1(plain.encode('utf-8')).hexdigest()[:8], 16)
 
 
-# ── Protobuf helpers (no external library needed) ─────────────────────────────
-
-def _pb_varint(value):
-    """Encode a non-negative integer as a protobuf varint."""
-    out = bytearray()
-    while True:
-        byte = value & 0x7F
-        value >>= 7
-        out.append(byte | (0x80 if value else 0))
-        if not value:
-            break
-    return bytes(out)
-
-
-def _pb_field(field_num, wire_type, payload):
-    """Encode one protobuf field tag + payload."""
-    tag = (field_num << 3) | wire_type
-    return _pb_varint(tag) + payload
-
-
-def _pb_len(field_num, data):
-    """Wire type 2 (length-delimited) field."""
-    return _pb_field(field_num, 2, _pb_varint(len(data)) + data)
-
-
-def encode_media_protobuf(media_files):
-    """
-    Encode the media list as an Anki-format protobuf MediaEntries message.
-
-    New-format .apkg uses protobuf for the media file:
-      message MediaEntry { string name=1; int64 size=2; bytes sha1=3; }
-      message MediaEntries { repeated MediaEntry entries=1; }
-    """
-    out = bytearray()
-    for fpath in media_files:
-        fname = os.path.basename(fpath)
-        fsize = os.path.getsize(fpath)
-        with open(fpath, 'rb') as f:
-            sha1 = hashlib.sha1(f.read()).digest()  # 20 bytes
-        inner = (
-            _pb_len(1, fname.encode('utf-8')) +  # name
-            _pb_field(2, 0, _pb_varint(fsize)) +  # size (varint)
-            _pb_len(3, sha1)                       # sha1
-        )
-        out += _pb_len(1, inner)  # repeated entries = 1
-    return bytes(out)
-
-
 def guid_for(*args):
     """Same GUID generation as genanki.guid_for."""
     h = hashlib.sha256(str(args).encode('utf-8')).digest()[:6]
@@ -692,23 +641,17 @@ with tempfile.TemporaryDirectory() as tmp:
     conn.commit()
     conn.close()
 
-    # 3. Re-compress with zstd
+    # 3. Read the final database
     with open(db_path, 'rb') as f:
-        raw = f.read()
-    cctx = zstandard.ZstdCompressor()
-    compressed_new = cctx.compress(raw)
+        db_raw = f.read()
 
-    # 4. Build media file in protobuf format (required for new-format .apkg)
-    media_proto = encode_media_protobuf(media_files)
-    media_compressed = cctx.compress(media_proto)
+    # 4. Build media index (JSON: {"0": "filename.jpg", ...})
+    media_index = {str(i): os.path.basename(fpath) for i, fpath in enumerate(media_files)}
 
-    # 5. Write the .apkg
-    # Note: collection.anki2 omitted — it doesn't contain the AllInOne model
-    # anyway (only default models), and with meta=ver=3 Anki uses anki21b.
+    # 5. Write the .apkg (collection.anki21 format — compatible with all Anki 2.1+ versions)
     with zipfile.ZipFile(OUTPUT_APKG, 'w', zipfile.ZIP_STORED) as zout:
-        zout.writestr('meta', APKG_META)
-        zout.writestr('collection.anki21b', compressed_new)
-        zout.writestr('media', media_compressed)
+        zout.writestr('collection.anki21', db_raw)
+        zout.writestr('media', json.dumps(media_index))
 
         for i, fpath in enumerate(media_files):
             zout.write(fpath, str(i))
