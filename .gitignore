@@ -1,0 +1,12 @@
+# Claude Code local settings (machine-specific paths)
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated output
+*.apkg
+*.txt
+!README.md
+!card_templates/*.txt
