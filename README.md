@@ -4,7 +4,7 @@ Converts saved Udemy practice exam pages into Anki flashcard decks (`.apkg`).
 
 The script is fully self-contained — no reference `.apkg` file or external Anki installation is needed to generate the deck.
 
-Please use the resulting flashcards in accordance with IP law. The platform might get more locked down if people misbehave.
+Please use the resulting flashcards in accordance with IP law. The platform might get more locked down if people misbehave. This means you should have bought the content yourself, only use it yourself and not distribute the resulting apkg files to anyone else.
 
 ## Requirements
 
