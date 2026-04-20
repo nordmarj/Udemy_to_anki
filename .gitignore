@@ -10,3 +10,4 @@ __pycache__/
 *.txt
 !README.md
 !card_templates/*.txt
+udemy_to_anki.code-workspace
