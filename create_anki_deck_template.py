@@ -308,7 +308,7 @@ with tempfile.TemporaryDirectory() as tmp:
         sfld = re.sub(r'<[^>]+>', '', data['question'])  # plain text sort field
         csum = field_checksum(data['question'])
         nid  = base_id + i
-        guid = guid_for(stem, str(data['qnum']))
+        guid = guid_for(data['question'], *data['options'], data['answers_binary'])
 
         cur.execute(
             "INSERT INTO notes (id, guid, mid, mod, usn, tags, flds, sfld, csum, flags, data) "
@@ -358,7 +358,7 @@ with open(OUTPUT_TXT, 'w', encoding='utf-8', newline='') as f:
     f.write('#deck column:3\n')
     f.write('#tags column:16\n')
     for data in all_data:
-        guid = guid_for(stem, str(data['qnum']))
+        guid = guid_for(data['question'], *data['options'], data['answers_binary'])
         cols = [
             guid,
             'AllInOne (kprim, mc, sc)++sixOptions',
